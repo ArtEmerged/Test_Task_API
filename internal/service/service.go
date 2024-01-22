@@ -7,6 +7,7 @@ import (
 
 type People interface {
 	CreatePerson(newUser models.Person) (int, error)
+	DeletePerson(id int) error
 }
 
 type Service struct {

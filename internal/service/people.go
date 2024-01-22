@@ -15,6 +15,10 @@ func NewPeopleService(repo *repository.Repository) *PeopleService {
 	return &PeopleService{repo: repo.People}
 }
 
+func (s *PeopleService) DeletePerson(id int) error {
+	return s.repo.DeletePerson(id)
+}
+
 func (s *PeopleService) CreatePerson(newPerson models.Person) (int, error) {
 	person, err := s.repo.GetPerson(newPerson)
 	if err != nil {
@@ -26,7 +30,7 @@ func (s *PeopleService) CreatePerson(newPerson models.Person) (int, error) {
 	}
 
 	//TODO add validation
-	
+
 	newPerson, err = encodingData(newPerson)
 	if err != nil {
 		return -1, err // 500

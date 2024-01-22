@@ -57,3 +57,17 @@ func (r *PeopleRepo) CreatePerson(newPerson models.Person) (int, error) {
 
 	return id, tx.Commit()
 }
+
+func (r *PeopleRepo) DeletePerson(id int) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", peopleTable)
+	_, err := r.db.Exec(query, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrNoSuchPerson
+		}
+
+		return err
+	}
+
+	return nil
+}

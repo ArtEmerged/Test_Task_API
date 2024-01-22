@@ -13,6 +13,7 @@ const (
 type People interface {
 	CreatePerson(newPerson models.Person) (int, error)
 	GetPerson(newPerson models.Person) (models.Person, error)
+	DeletePerson(id int) error
 }
 
 type Repository struct {
