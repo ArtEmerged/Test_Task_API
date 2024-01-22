@@ -30,9 +30,30 @@ func (r *PeopleRepo) CreatePerson(newPerson models.Person) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (name, surname, patronymic, age, gender) VALUES($1,$2,$3,$4,$5)RETURNING id", peopleTable)
 
-	err := r.db.QueryRow(query, newPerson.Name, newPerson.Surname, newPerson.Patronymic, newPerson.Age, newPerson.Gender).Scan(&id)
+	tx, err := r.db.Begin()
 	if err != nil {
+		tx.Rollback()
 		return -1, err
 	}
-	return id, nil
+
+	err = tx.QueryRow(query, newPerson.Name, newPerson.Surname, newPerson.Patronymic, newPerson.Age, newPerson.Gender).Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+
+	if len(newPerson.Nationalize) == 0 {
+		return id, tx.Commit()
+	}
+
+	query = fmt.Sprintf("INSERT INTO %s (person_id, country_id) VALUES($1,$2)", nationalizeTable)
+	for _, country_id := range newPerson.Nationalize {
+		_, err = tx.Exec(query, id, country_id)
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
+	}
+
+	return id, tx.Commit()
 }

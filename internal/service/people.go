@@ -25,6 +25,8 @@ func (s *PeopleService) CreatePerson(newPerson models.Person) (int, error) {
 		return -1, fmt.Errorf("such a person has already been created")
 	}
 
+	//TODO add validation
+	
 	newPerson, err = encodingData(newPerson)
 	if err != nil {
 		return -1, err // 500
@@ -43,7 +45,7 @@ func encodingData(person models.Person) (models.Person, error) {
 	if err != nil {
 		return person, err
 	}
-	fmt.Println(gender)
+	
 	nationalize, err := pkg.EnrichmentOfDataOnNationality(person.Name)
 	if err != nil {
 		return person, err
@@ -58,6 +60,6 @@ func encodingData(person models.Person) (models.Person, error) {
 	if nationalize != nil {
 		person.Nationalize = nationalize
 	}
-	fmt.Println(person)
+	
 	return person, nil
 }
