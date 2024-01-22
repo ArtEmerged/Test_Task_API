@@ -60,13 +60,16 @@ func (r *PeopleRepo) CreatePerson(newPerson models.Person) (int, error) {
 
 func (r *PeopleRepo) DeletePerson(id int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", peopleTable)
-	_, err := r.db.Exec(query, id)
+	res, err := r.db.Exec(query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return models.ErrNoSuchPerson
-		}
-
 		return err
+	}
+	deleteId, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if deleteId == 0 {
+		return models.ErrNoSuchPerson
 	}
 
 	return nil
