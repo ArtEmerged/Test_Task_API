@@ -15,6 +15,13 @@ func (h *Handler) createPerson(c *gin.Context) {
 		return
 	}
 
+	// validation ascii letters
+	err = validateData(input)
+	if err != nil {
+		h.ErrResp(c, models.ErrRespons{Code: 400, Message: err.Error()})
+		return
+	}
+
 	id, err := h.services.CreatePerson(input)
 	if err != nil {
 		h.ErrResp(c, models.ErrRespons{Code: 400, Message: err.Error()})
