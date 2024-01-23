@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"strconv"
 	"test_task/internal/models"
 
@@ -32,8 +31,6 @@ func (h *Handler) getPeople(c *gin.Context) {
 			"nationalize": c.Query("nationalize"),
 		},
 	}
-
-	fmt.Println(filters)
 
 	people, err := h.services.GetPeople(filters)
 	if err != nil {

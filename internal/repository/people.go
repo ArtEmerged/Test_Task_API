@@ -101,8 +101,6 @@ func (r *PeopleRepo) UpdatePerson(id int, person models.Person) error {
 	set := make([]string, 0)
 	args := make([]interface{}, 0)
 
-	fmt.Println(person)
-
 	if person.Name != "" {
 		args = append(args, person.Name)
 		set = append(set, fmt.Sprintf("name = $%d", len(args)))
