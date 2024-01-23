@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"test_task/internal/models"
 	"test_task/internal/repository"
 	"test_task/pkg"
@@ -15,6 +14,27 @@ func NewPeopleService(repo *repository.Repository) *PeopleService {
 	return &PeopleService{repo: repo.People}
 }
 
+func (s *PeopleService) UpdatePerson(id int, person models.Person) error {
+	oldPerson, err := s.repo.GetPersonById(id)
+	if err != nil {
+		return err
+	}
+
+	if person.Name == "" && person.Name != oldPerson.Name {
+		person, err = encodingData(person)
+		if err != nil {
+			return err // 500
+		}
+	}
+
+	person, err = encodingData(person)
+	if err != nil {
+		return err // 500
+	}
+
+	return s.repo.UpdatePerson(id, person)
+}
+
 func (s *PeopleService) DeletePerson(id int) error {
 	return s.repo.DeletePerson(id)
 }
@@ -26,7 +46,7 @@ func (s *PeopleService) CreatePerson(newPerson models.Person) (int, error) {
 	}
 
 	if person.Id != 0 {
-		return -1, fmt.Errorf("such a person has already been created")
+		return -1, models.ErrAlreadyCreated
 	}
 
 	//TODO add validation
@@ -49,7 +69,7 @@ func encodingData(person models.Person) (models.Person, error) {
 	if err != nil {
 		return person, err
 	}
-	
+
 	nationalize, err := pkg.EnrichmentOfDataOnNationality(person.Name)
 	if err != nil {
 		return person, err
@@ -64,6 +84,6 @@ func encodingData(person models.Person) (models.Person, error) {
 	if nationalize != nil {
 		person.Nationalize = nationalize
 	}
-	
+
 	return person, nil
 }

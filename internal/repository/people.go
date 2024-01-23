@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"test_task/internal/models"
 )
 
@@ -12,6 +13,76 @@ type PeopleRepo struct {
 
 func NewPeoplePostgres(db *sql.DB) *PeopleRepo {
 	return &PeopleRepo{db: db}
+}
+
+func (r *PeopleRepo) GetPersonById(id int) (models.Person, error) {
+	var person models.Person
+	query := fmt.Sprintf("SELECT * FROM  %s WHERE id=$1", peopleTable)
+	err := r.db.QueryRow(query, id).Scan(
+		&person.Id, &person.Name, &person.Surname, &person.Patronymic, &person.Age, &person.Gender)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = models.ErrNoSuchPerson
+		}
+		return person, err
+	}
+	query = fmt.Sprintf("SELECT country_id FROM %s WHERE person_id=$1", nationalizeTable)
+	rows, err := r.db.Query(query, id)
+	if err != nil {
+		return person, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var country_id string
+		err := rows.Scan(&country_id)
+		if err != nil {
+			return person, err
+		}
+		person.Nationalize = append(person.Nationalize, country_id)
+	}
+	err = rows.Err()
+	if err != nil {
+		return person, err
+	}
+
+	return person, nil
+}
+
+func (r *PeopleRepo) UpdatePerson(id int, person models.Person) error {
+	set := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+	if person.Name != "" {
+		set = append(set, fmt.Sprintf("name = $%d", argId))
+		args = append(args, person.Name)
+		argId++
+	}
+	if person.Surname != "" {
+		set = append(set, fmt.Sprintf("surname = $%d", argId))
+		args = append(args, person.Surname)
+		argId++
+	}
+	if person.Patronymic != "" {
+		set = append(set, fmt.Sprintf("patronymic = $%d", argId))
+		args = append(args, person.Patronymic)
+		argId++
+	}
+	if person.Age != 0 {
+		set = append(set, fmt.Sprintf("age = $%d", argId))
+		args = append(args, person.Age)
+		argId++
+	}
+	if person.Gender != "" {
+		set = append(set, fmt.Sprintf("gender = $%d", argId))
+		args = append(args, person.Gender)
+		argId++
+	}
+
+	args = append(args, id)
+	joinSet := strings.Join(set, ", ")
+	query := fmt.Sprintf("UPDATE %s  SET %s WHERE id = $%d", peopleTable, joinSet, argId)
+	_, err := r.db.Exec(query, args...)
+	return err
 }
 
 func (r *PeopleRepo) GetPerson(newPerson models.Person) (models.Person, error) {
