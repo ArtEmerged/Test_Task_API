@@ -1,7 +1,7 @@
 package service
 
 import (
-	"fmt"
+	"strings"
 	"test_task/internal/models"
 	"test_task/internal/repository"
 	"test_task/pkg"
@@ -44,8 +44,9 @@ func (s *PeopleService) UpdatePerson(id int, person models.Person) error {
 		return err
 	}
 
+	transferToUppercase(&person.Name, &person.Surname, &person.Patronymic)
+
 	if person.Name != "" && person.Name != oldPerson.Name {
-		fmt.Println("encodingData")
 		person, err = encodingData(person)
 		if err != nil {
 			return err // 500
@@ -69,7 +70,7 @@ func (s *PeopleService) CreatePerson(newPerson models.Person) (int, error) {
 		return -1, models.ErrAlreadyCreated
 	}
 
-	//TODO add validation
+	transferToUppercase(&newPerson.Name, &newPerson.Surname, &newPerson.Patronymic)
 
 	newPerson, err = encodingData(newPerson)
 	if err != nil {
@@ -77,6 +78,16 @@ func (s *PeopleService) CreatePerson(newPerson models.Person) (int, error) {
 	}
 
 	return s.repo.CreatePerson(newPerson)
+}
+
+func transferToUppercase(letters ...*string) {
+	for i := 0; i < len(letters); i++ {
+		if len(*letters[i]) != 0 {
+			newWord := []rune(strings.ToLower(*letters[i]))
+			newWord[0] = newWord[0] - 32
+			*letters[i] = string(newWord)
+		}
+	}
 }
 
 func encodingData(person models.Person) (models.Person, error) {
@@ -104,7 +115,6 @@ func encodingData(person models.Person) (models.Person, error) {
 	if nationalize != nil {
 		person.Nationalize = nationalize
 	}
-	fmt.Println(person)
 
 	return person, nil
 }
