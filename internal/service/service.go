@@ -7,9 +7,10 @@ import (
 
 type People interface {
 	CreatePerson(newPerson models.Person) (int, error)
-	DeletePerson(id int) error
-	UpdatePerson(id int, person models.Person) error
 	GetPersonById(id int) (models.Person, error)
+	GetPeople(filters models.Filters) ([]models.Person, error)
+	UpdatePerson(id int, person models.Person) error
+	DeletePerson(id int) error
 }
 
 type Service struct {

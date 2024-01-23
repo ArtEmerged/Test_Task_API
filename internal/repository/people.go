@@ -48,39 +48,83 @@ func (r *PeopleRepo) GetPersonById(id int) (models.Person, error) {
 	return person, nil
 }
 
+func (r *PeopleRepo) GetPeopleId(filters models.Filters) ([]int, error) {
+	var peopleId []int
+
+	query := fmt.Sprintf("SELECT p.id FROM %s p", peopleTable)
+	var args []interface{}
+	where := " WHERE 1=1"
+
+	if nation := filters.Filters["nationalize"]; nation != "" {
+		fmt.Println("nationalize == ok")
+		args = append(args, nation)
+		query += fmt.Sprintf(" JOIN %s n ON p.id = n.person_id%s", nationalizeTable, where)
+		query += fmt.Sprintf(" AND n.country_id = $%d", len(args))
+	} else {
+		query += where
+	}
+
+	for key, value := range filters.Filters {
+		if key != "nationalize" && value != "" {
+			fmt.Println(key)
+			args = append(args, value)
+			query += fmt.Sprintf(" AND p.%s = $%d", key, len(args))
+		}
+	}
+
+	query += fmt.Sprintf(" OFFSET %d LIMIT %d", filters.Offset, filters.Limit)
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		peopleId = append(peopleId, id)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return peopleId, nil
+}
+
 func (r *PeopleRepo) UpdatePerson(id int, person models.Person) error {
 	set := make([]string, 0)
 	args := make([]interface{}, 0)
-	argId := 1
+
 	if person.Name != "" {
-		set = append(set, fmt.Sprintf("name = $%d", argId))
 		args = append(args, person.Name)
-		argId++
+		set = append(set, fmt.Sprintf("name = $%d", len(args)))
 	}
 	if person.Surname != "" {
-		set = append(set, fmt.Sprintf("surname = $%d", argId))
 		args = append(args, person.Surname)
-		argId++
+		set = append(set, fmt.Sprintf("surname = $%d", len(args)))
 	}
 	if person.Patronymic != "" {
-		set = append(set, fmt.Sprintf("patronymic = $%d", argId))
 		args = append(args, person.Patronymic)
-		argId++
+		set = append(set, fmt.Sprintf("patronymic = $%d", len(args)))
 	}
 	if person.Age != 0 {
-		set = append(set, fmt.Sprintf("age = $%d", argId))
 		args = append(args, person.Age)
-		argId++
+		set = append(set, fmt.Sprintf("age = $%d", len(args)))
 	}
 	if person.Gender != "" {
-		set = append(set, fmt.Sprintf("gender = $%d", argId))
 		args = append(args, person.Gender)
-		argId++
+		set = append(set, fmt.Sprintf("gender = $%d", len(args)))
 	}
 
 	args = append(args, id)
 	joinSet := strings.Join(set, ", ")
-	query := fmt.Sprintf("UPDATE %s  SET %s WHERE id = $%d", peopleTable, joinSet, argId)
+	query := fmt.Sprintf("UPDATE %s  SET %s WHERE id = $%d", peopleTable, joinSet, len(args))
 	_, err := r.db.Exec(query, args...)
 	return err
 }

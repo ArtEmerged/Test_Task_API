@@ -18,6 +18,25 @@ func (s *PeopleService) GetPersonById(id int) (models.Person, error) {
 	return s.repo.GetPersonById(id)
 }
 
+func (s *PeopleService) GetPeople(filters models.Filters) ([]models.Person, error) {
+	peopleId, err := s.repo.GetPeopleId(filters)
+	if err != nil {
+		return nil, err
+	}
+	
+	people := make([]models.Person, len(peopleId))
+	var person models.Person
+	for ind, id := range peopleId {
+		person, err = s.repo.GetPersonById(id)
+		if err != nil {
+			return nil, err
+		}
+		people[ind] = person
+	}
+
+	return people, nil
+}
+
 func (s *PeopleService) UpdatePerson(id int, person models.Person) error {
 	oldPerson, err := s.repo.GetPersonById(id)
 	if err != nil {
