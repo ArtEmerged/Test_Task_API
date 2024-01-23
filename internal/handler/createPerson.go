@@ -27,7 +27,7 @@ func (h *Handler) createPerson(c *gin.Context) {
 		h.ErrResp(c, models.ErrRespons{Code: 400, Message: err.Error()})
 	}
 
-	c.JSON(200, map[string]interface{}{
+	c.JSON(200, gin.H{
 		"id": id,
 	})
 }

@@ -24,7 +24,7 @@ func (h *Handler) deletePerson(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, map[string]interface{}{
+	c.JSON(200, gin.H{
 		"status": "ok",
 	})
 }
