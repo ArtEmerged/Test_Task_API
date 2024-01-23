@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"test_task/internal/models"
 	"test_task/internal/repository"
 	"test_task/pkg"
@@ -23,7 +24,7 @@ func (s *PeopleService) GetPeople(filters models.Filters) ([]models.Person, erro
 	if err != nil {
 		return nil, err
 	}
-	
+
 	people := make([]models.Person, len(peopleId))
 	var person models.Person
 	for ind, id := range peopleId {
@@ -43,16 +44,12 @@ func (s *PeopleService) UpdatePerson(id int, person models.Person) error {
 		return err
 	}
 
-	if person.Name == "" && person.Name != oldPerson.Name {
+	if person.Name != "" && person.Name != oldPerson.Name {
+		fmt.Println("encodingData")
 		person, err = encodingData(person)
 		if err != nil {
 			return err // 500
 		}
-	}
-
-	person, err = encodingData(person)
-	if err != nil {
-		return err // 500
 	}
 
 	return s.repo.UpdatePerson(id, person)
@@ -107,6 +104,7 @@ func encodingData(person models.Person) (models.Person, error) {
 	if nationalize != nil {
 		person.Nationalize = nationalize
 	}
+	fmt.Println(person)
 
 	return person, nil
 }

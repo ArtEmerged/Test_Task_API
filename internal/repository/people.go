@@ -101,6 +101,8 @@ func (r *PeopleRepo) UpdatePerson(id int, person models.Person) error {
 	set := make([]string, 0)
 	args := make([]interface{}, 0)
 
+	fmt.Println(person)
+
 	if person.Name != "" {
 		args = append(args, person.Name)
 		set = append(set, fmt.Sprintf("name = $%d", len(args)))
@@ -125,8 +127,35 @@ func (r *PeopleRepo) UpdatePerson(id int, person models.Person) error {
 	args = append(args, id)
 	joinSet := strings.Join(set, ", ")
 	query := fmt.Sprintf("UPDATE %s  SET %s WHERE id = $%d", peopleTable, joinSet, len(args))
-	_, err := r.db.Exec(query, args...)
-	return err
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if len(person.Nationalize) != 0 {
+		query = fmt.Sprintf("DELETE FROM %s WHERE person_id=$1", nationalizeTable)
+		_, err = tx.Exec(query, id)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		query = fmt.Sprintf("INSERT INTO %s (person_id, country_id) VALUES($1,$2)", nationalizeTable)
+		for _, country_id := range person.Nationalize {
+			_, err = tx.Exec(query, id, country_id)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+	return tx.Commit()
 }
 
 func (r *PeopleRepo) GetPerson(newPerson models.Person) (models.Person, error) {
