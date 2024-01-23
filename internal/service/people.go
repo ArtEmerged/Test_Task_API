@@ -14,6 +14,10 @@ func NewPeopleService(repo *repository.Repository) *PeopleService {
 	return &PeopleService{repo: repo.People}
 }
 
+func (s *PeopleService) GetPersonById(id int) (models.Person, error) {
+	return s.repo.GetPersonById(id)
+}
+
 func (s *PeopleService) UpdatePerson(id int, person models.Person) error {
 	oldPerson, err := s.repo.GetPersonById(id)
 	if err != nil {

@@ -8,9 +8,10 @@ func (h *Handler) InitRouter() *gin.Engine {
 	people := router.Group("/people")
 	{
 		people.GET("/", h.getPeople)
-		people.POST("/", h.createPerson)
-		people.PUT("/:id", h.updatePerson)
-		people.DELETE("/:id", h.deletePerson)
+		people.GET("/:id", h.getPerson)
+		people.POST("/", h.createPerson) //+
+		people.PUT("/:id", h.updatePerson) //+
+		people.DELETE("/:id", h.deletePerson) //+
 	}
 
 	return router
