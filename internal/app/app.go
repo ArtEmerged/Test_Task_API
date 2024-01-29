@@ -13,7 +13,7 @@ func RunServer(cfg *config.Config) {
 
 	db, err := repository.InitPostgresDB(cfg.DB)
 	if err != nil {
-		log.Fatalf("failed to initialize db: %s", err.Error())
+		log.Fatalf("[ERRORS] failed to initialize db: %s", err.Error())
 	}
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
@@ -22,5 +22,8 @@ func RunServer(cfg *config.Config) {
 	srv := new(server.Server)
 
 	err = srv.Run(cfg, handlers.InitRouter())
+	if err != nil {
+		log.Fatal("A")
+	}
 
 }

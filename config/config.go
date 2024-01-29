@@ -1,5 +1,11 @@
 package config
 
+import (
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
 type ConfigDB struct {
 	Driver   string
 	Host     string
@@ -16,17 +22,25 @@ type Config struct {
 	DebugMod bool
 }
 
-func InitConfig() *Config {
-	cfgDb := ConfigDB{
-		Driver:   "postgres",
-		Host:     "localhost",
-		Port:     "5432",
-		User:     "postgres",
-		Password: "postgres",
-		DBName:   "postgres",
-		SSLMode:  "disable",
+func InitConfig() (*Config, error) {
+	err := godotenv.Load("app.env")
+	if err != nil {
+		return nil, err
 	}
+
+	cfgDb := ConfigDB{
+		Driver:   os.Getenv("DB_DRIVER"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSL_MODE"),
+	}
+
 	return &Config{
-		Port: "8080",
-		DB:   cfgDb}
+		Port:     os.Getenv("APP_PORT"),
+		DB:       cfgDb,
+		DebugMod: os.Getenv("DEBUG_MODE") == "true",
+	}, nil
 }
